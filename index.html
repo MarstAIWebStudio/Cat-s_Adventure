@@ -1,0 +1,1089 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>🐱 Cat Coin 관리 시스템</title>
+<link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800;900&family=Pretendard:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+:root{
+  --y50:#fffbeb;--y100:#fef3c7;--y200:#fde68a;--y300:#fcd34d;--y400:#fbbf24;
+  --y500:#f59e0b;--y600:#d97706;--y700:#b45309;
+  --o400:#fb923c;--o500:#f97316;
+  --cream:#fffdf5;--wg:#78716c;--dark:#1c1917;
+  --smd:0 4px 16px rgba(251,191,36,.15),0 2px 6px rgba(0,0,0,.06);
+  --slg:0 12px 40px rgba(251,191,36,.2),0 4px 12px rgba(0,0,0,.08);
+  --r:18px;
+}
+*{margin:0;padding:0;box-sizing:border-box;}
+body{font-family:'Pretendard','Nunito',sans-serif;background:var(--cream);color:var(--dark);min-height:100vh;overflow-x:hidden;}
+body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellipse 80% 50% at 20% 10%,rgba(251,191,36,.12) 0%,transparent 60%),radial-gradient(ellipse 60% 40% at 80% 90%,rgba(249,115,22,.08) 0%,transparent 60%);pointer-events:none;z-index:0;}
+@keyframes slideUp{from{opacity:0;transform:translateY(28px)}to{opacity:1;transform:translateY(0)}}
+@keyframes fadeIn{from{opacity:0}to{opacity:1}}
+@keyframes float{0%,100%{transform:translateY(0)}50%{transform:translateY(-6px)}}
+@keyframes fadeSlide{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}
+
+/* SCREENS */
+.screen{display:none;position:relative;z-index:1;}
+.screen.active{display:flex;}
+
+/* ── AUTH ── */
+#auth-screen{min-height:100vh;flex-direction:column;align-items:center;justify-content:center;padding:24px;}
+.auth-card{background:#fff;border-radius:28px;padding:44px 40px;width:100%;max-width:420px;box-shadow:var(--slg),0 0 0 1px rgba(251,191,36,.12);animation:slideUp .5s cubic-bezier(.22,1,.36,1) both;}
+.auth-logo{text-align:center;margin-bottom:30px;}
+.auth-logo .ci{font-size:52px;display:block;margin-bottom:8px;animation:float 3s ease-in-out infinite;}
+.auth-logo h1{font-family:'Nunito',sans-serif;font-size:26px;font-weight:900;background:linear-gradient(135deg,var(--y600),var(--o500));-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;}
+.auth-logo p{font-size:13px;color:var(--wg);margin-top:4px;}
+.auth-tabs{display:flex;background:var(--y50);border-radius:12px;padding:4px;margin-bottom:26px;border:1.5px solid var(--y200);}
+.auth-tab{flex:1;padding:9px;border:none;background:transparent;border-radius:9px;font-size:14px;font-weight:700;cursor:pointer;color:var(--wg);transition:all .25s;font-family:inherit;}
+.auth-tab.active{background:linear-gradient(135deg,var(--y400),var(--o400));color:#fff;box-shadow:0 2px 8px rgba(251,191,36,.4);}
+
+/* ── FORM ── */
+.fg{margin-bottom:16px;}
+.fg label{display:block;font-size:13px;font-weight:700;color:var(--y700);margin-bottom:6px;}
+.fg input,.fg textarea,.fg select{width:100%;padding:12px 15px;border:2px solid var(--y200);border-radius:12px;font-size:14px;font-family:inherit;background:var(--y50);color:var(--dark);transition:all .2s;outline:none;}
+.fg input:focus,.fg textarea:focus,.fg select:focus{border-color:var(--y400);background:#fff;box-shadow:0 0 0 4px rgba(251,191,36,.12);}
+.fg input::placeholder,.fg textarea::placeholder{color:#c4b5a0;}
+.fg textarea{resize:vertical;min-height:70px;}
+.fg select{cursor:pointer;}
+
+/* ── BUTTONS ── */
+.btn-p{width:100%;padding:13px;background:linear-gradient(135deg,var(--y400),var(--o500));border:none;border-radius:13px;color:#fff;font-size:15px;font-weight:800;cursor:pointer;font-family:inherit;transition:all .25s;box-shadow:0 4px 14px rgba(251,191,36,.4);letter-spacing:.02em;}
+.btn-p:hover{transform:translateY(-2px);box-shadow:0 8px 22px rgba(251,191,36,.5);}
+.btn-p:active{transform:translateY(0);}
+.btn-s{padding:12px 16px;background:var(--y100);border:2px solid var(--y200);border-radius:12px;color:var(--y700);font-size:14px;font-weight:700;cursor:pointer;font-family:inherit;transition:all .2s;}
+.btn-s:hover{background:var(--y200);}
+.btn-sm{padding:6px 10px;border-radius:8px;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit;border:none;transition:all .2s;white-space:nowrap;}
+.btn-sm.give{background:var(--y100);color:var(--y700);}
+.btn-sm.give:hover{background:var(--y200);}
+.btn-sm.edit{background:#eff6ff;color:#1d4ed8;}
+.btn-sm.edit:hover{background:#dbeafe;}
+.btn-sm.del{background:#fff1f2;color:#e11d48;}
+.btn-sm.del:hover{background:#fecdd3;}
+
+/* ── MODAL ── */
+.mo{position:fixed;inset:0;background:rgba(28,25,23,.55);backdrop-filter:blur(6px);z-index:200;display:flex;align-items:center;justify-content:center;padding:20px;animation:fadeIn .2s ease both;}
+.mc{background:#fff;border-radius:24px;padding:28px;width:100%;max-width:460px;box-shadow:0 24px 64px rgba(0,0,0,.15);animation:slideUp .3s cubic-bezier(.22,1,.36,1) both;max-height:92vh;overflow-y:auto;}
+.mc h3{font-size:17px;font-weight:800;margin-bottom:18px;display:flex;align-items:center;gap:8px;}
+.mc-act{display:flex;gap:10px;margin-top:18px;}
+.mc-act .btn-p{flex:2;}
+.mc-act .btn-s{flex:1;}
+
+/* ── 2FA Gmail modal ── */
+.gmail-box{background:var(--y50);border:1.5px solid var(--y200);border-radius:16px;padding:20px;margin-bottom:16px;text-align:center;}
+.gmail-box .gicon{font-size:40px;margin-bottom:8px;}
+.gmail-box h4{font-size:16px;font-weight:800;margin-bottom:6px;}
+.gmail-box p{font-size:13px;color:var(--wg);line-height:1.6;}
+.gmail-input-wrap{display:flex;gap:10px;align-items:center;}
+.gmail-input-wrap input{flex:1;}
+.gmail-input-wrap .btn-p{width:auto;padding:12px 18px;font-size:14px;white-space:nowrap;}
+
+/* ── APP ── */
+#app-screen{min-height:100vh;flex-direction:column;}
+.app-header{position:sticky;top:0;z-index:50;background:rgba(255,253,245,.93);backdrop-filter:blur(12px);border-bottom:1.5px solid var(--y200);padding:0 20px;display:flex;align-items:center;justify-content:space-between;height:62px;}
+.hlogo{display:flex;align-items:center;gap:9px;font-family:'Nunito',sans-serif;font-weight:900;font-size:19px;background:linear-gradient(135deg,var(--y600),var(--o500));-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;}
+.hlogo span{font-size:24px;}
+.hcoin{display:flex;align-items:center;gap:7px;background:linear-gradient(135deg,var(--y400),var(--o400));color:#fff;padding:7px 14px;border-radius:40px;font-weight:800;font-size:15px;box-shadow:0 2px 8px rgba(251,191,36,.4);}
+
+/* ── BOTTOM TABS ── */
+.tab-nav{display:flex;background:#fff;border-top:1.5px solid var(--y200);position:sticky;bottom:0;z-index:50;box-shadow:0 -4px 20px rgba(251,191,36,.08);}
+.tb{flex:1;display:flex;flex-direction:column;align-items:center;gap:2px;padding:8px 0 13px;border:none;background:transparent;cursor:pointer;transition:all .2s;color:#c4b5a0;font-family:inherit;}
+.tb .ti{font-size:21px;}
+.tb .tl{font-size:11px;font-weight:700;letter-spacing:.03em;}
+.tb.active{color:var(--y600);}
+.tb.active .ti{transform:translateY(-2px);}
+.tind{height:3px;border-radius:0 0 4px 4px;background:linear-gradient(90deg,var(--y400),var(--o400));margin-bottom:-3px;opacity:0;transition:opacity .2s;}
+.tb.active .tind{opacity:1;}
+
+/* ── TAB CONTENT ── */
+.tc{flex:1;display:none;padding:18px;max-width:760px;margin:0 auto;width:100%;}
+.tc.active{display:block;animation:fadeSlide .3s ease both;}
+
+/* ── CARD ── */
+.card{background:#fff;border-radius:var(--r);padding:20px;box-shadow:var(--smd);border:1.5px solid rgba(251,191,36,.1);margin-bottom:16px;}
+.ct{font-size:15px;font-weight:800;color:var(--dark);margin-bottom:14px;display:flex;align-items:center;gap:8px;flex-wrap:wrap;}
+.badge{font-size:11px;background:var(--y100);color:var(--y700);padding:3px 8px;border-radius:20px;font-weight:700;}
+.divider{height:1.5px;background:var(--y100);margin:14px 0;}
+.sec-label{font-size:11px;font-weight:800;color:var(--wg);letter-spacing:.08em;text-transform:uppercase;margin-bottom:10px;}
+
+/* ── HERO ── */
+.hero-card{background:linear-gradient(135deg,var(--y400) 0%,var(--o500) 100%);border-radius:var(--r);padding:24px;color:#fff;position:relative;overflow:hidden;margin-bottom:16px;box-shadow:0 8px 32px rgba(251,191,36,.4);}
+.hero-card::before{content:'🐱';position:absolute;right:-10px;bottom:-18px;font-size:96px;opacity:.15;transform:rotate(-15deg);}
+.hero-card .gr{font-size:13px;opacity:.85;margin-bottom:3px;font-weight:600;}
+.hero-card .un{font-size:21px;font-weight:900;margin-bottom:16px;font-family:'Nunito',sans-serif;}
+.hero-card .bl{font-size:11px;opacity:.8;font-weight:600;letter-spacing:.08em;text-transform:uppercase;}
+.hero-card .ba{font-size:40px;font-weight:900;font-family:'Nunito',sans-serif;line-height:1;margin-top:4px;display:flex;align-items:center;gap:8px;}
+.ab{display:inline-flex;align-items:center;gap:6px;background:rgba(255,255,255,.25);border:1.5px solid rgba(255,255,255,.4);border-radius:20px;padding:5px 12px;font-size:12px;font-weight:700;margin-top:10px;backdrop-filter:blur(4px);}
+
+/* ── ADMIN ACTIONS ── */
+.admin-actions{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-bottom:16px;}
+.btn-adm{display:flex;align-items:center;justify-content:center;gap:5px;padding:11px 6px;border-radius:12px;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit;border:2px dashed var(--y400);background:var(--y50);color:var(--y700);transition:all .2s;}
+.btn-adm:hover{background:var(--y100);border-color:var(--y500);transform:translateY(-1px);}
+
+/* ── NOTICE ── */
+.notice-item{display:flex;gap:12px;padding:13px 0;border-bottom:1.5px solid var(--y100);}
+.notice-item:last-child{border-bottom:none;padding-bottom:0;}
+.notice-item:first-child{padding-top:0;}
+.nnum{width:30px;height:30px;background:linear-gradient(135deg,var(--y300),var(--y400));border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:800;color:#78350f;flex-shrink:0;}
+.nbody{flex:1;}
+.ntitle{font-size:14px;font-weight:700;margin-bottom:2px;}
+.ndate{font-size:12px;color:var(--wg);}
+.ncontent{font-size:13px;color:#57534e;margin-top:4px;line-height:1.5;}
+.n-admin-btns{display:flex;gap:6px;flex-shrink:0;}
+
+/* ── MISSION ── */
+.mi-item{display:flex;align-items:center;gap:10px;padding:13px 0;border-bottom:1.5px solid var(--y100);}
+.mi-item:last-child{border-bottom:none;padding-bottom:0;}
+.mi-item:first-child{padding-top:0;}
+.miicon{width:40px;height:40px;border-radius:12px;background:linear-gradient(135deg,var(--y100),var(--y200));display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0;}
+.mibody{flex:1;min-width:0;}
+.miname{font-size:14px;font-weight:700;margin-bottom:2px;}
+.midesc{font-size:12px;color:var(--wg);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.mirwd{display:flex;align-items:center;gap:3px;background:var(--y100);color:var(--y700);border-radius:20px;padding:3px 9px;font-size:13px;font-weight:800;white-space:nowrap;flex-shrink:0;}
+.btn-mi{background:linear-gradient(135deg,var(--y400),var(--o400));color:#fff;border:none;border-radius:9px;padding:7px 12px;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit;transition:all .2s;white-space:nowrap;flex-shrink:0;}
+.btn-mi:hover{transform:translateY(-1px);box-shadow:0 4px 12px rgba(251,191,36,.4);}
+.btn-mi:disabled{background:#e7e5e4;color:#a8a29e;cursor:not-allowed;transform:none;box-shadow:none;}
+.mi-admin-btns{display:flex;gap:5px;flex-shrink:0;}
+
+/* ── SHOP ── */
+.shop-grid{display:grid;grid-template-columns:1fr 1fr;gap:11px;}
+.shop-item{background:var(--y50);border-radius:15px;padding:15px 11px;border:1.5px solid var(--y200);text-align:center;transition:all .25s;position:relative;}
+.shop-item:hover{border-color:var(--y400);box-shadow:0 4px 14px rgba(251,191,36,.2);transform:translateY(-2px);}
+.si-icon{font-size:32px;margin-bottom:6px;}
+.si-name{font-size:13px;font-weight:800;margin-bottom:2px;}
+.si-desc{font-size:11px;color:var(--wg);margin-bottom:9px;line-height:1.4;}
+.si-price{display:flex;align-items:center;justify-content:center;gap:4px;font-size:14px;font-weight:900;color:var(--y600);margin-bottom:8px;font-family:'Nunito',sans-serif;}
+.btn-buy{width:100%;background:linear-gradient(135deg,var(--y400),var(--o400));color:#fff;border:none;border-radius:9px;padding:7px;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit;transition:all .2s;}
+.btn-buy:hover{box-shadow:0 4px 12px rgba(251,191,36,.4);}
+.btn-buy:disabled{background:#e7e5e4;color:#a8a29e;cursor:not-allowed;}
+.shop-admin-btns{display:flex;gap:5px;justify-content:center;margin-top:7px;}
+
+/* ── PROFILE ── */
+.p-avatar{width:74px;height:74px;border-radius:50%;background:linear-gradient(135deg,var(--y300),var(--o400));display:flex;align-items:center;justify-content:center;font-size:36px;margin:0 auto 13px;box-shadow:0 4px 16px rgba(251,191,36,.4);}
+.p-name{text-align:center;font-size:20px;font-weight:800;margin-bottom:3px;}
+.p-id{text-align:center;font-size:13px;color:var(--wg);margin-bottom:16px;}
+.p-stats{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
+.stat-box{background:var(--y50);border-radius:13px;padding:13px;text-align:center;border:1.5px solid var(--y200);}
+.sv{font-size:20px;font-weight:900;color:var(--y600);font-family:'Nunito',sans-serif;}
+.sl{font-size:12px;color:var(--wg);margin-top:2px;font-weight:600;}
+
+/* ── TOGGLE ── */
+.sr{display:flex;align-items:center;justify-content:space-between;padding:14px 0;border-bottom:1.5px solid var(--y100);}
+.sr:last-child{border-bottom:none;padding-bottom:0;}
+.sr:first-child{padding-top:0;}
+.si-title{font-size:14px;font-weight:700;margin-bottom:2px;}
+.si-sub{font-size:12px;color:var(--wg);}
+.tgl{position:relative;}
+.tgl input{opacity:0;width:0;height:0;position:absolute;}
+.tgl-s{display:block;width:50px;height:27px;background:#e7e5e4;border-radius:27px;cursor:pointer;transition:all .3s;position:relative;}
+.tgl-s::after{content:'';position:absolute;left:3px;top:3px;width:21px;height:21px;background:#fff;border-radius:50%;box-shadow:0 2px 6px rgba(0,0,0,.15);transition:all .3s;}
+.tgl input:checked+.tgl-s{background:linear-gradient(135deg,var(--y400),var(--o400));box-shadow:0 2px 8px rgba(251,191,36,.4);}
+.tgl input:checked+.tgl-s::after{left:26px;}
+
+/* ── MEMBER LIST ── */
+.member-item{display:flex;align-items:center;gap:11px;padding:13px 0;border-bottom:1.5px solid var(--y100);}
+.member-item:last-child{border-bottom:none;padding-bottom:0;}
+.member-item:first-child{padding-top:0;}
+.m-avatar{width:38px;height:38px;border-radius:50%;background:linear-gradient(135deg,var(--y300),var(--o400));display:flex;align-items:center;justify-content:center;font-size:17px;flex-shrink:0;}
+.m-info{flex:1;min-width:0;}
+.m-name{font-size:13px;font-weight:700;}
+.m-meta{font-size:11px;color:var(--wg);margin-top:1px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.m-coin{font-size:13px;font-weight:800;color:var(--y600);font-family:'Nunito',sans-serif;white-space:nowrap;flex-shrink:0;}
+.m-actions{display:flex;gap:5px;flex-shrink:0;}
+
+/* ── REQUESTS ── */
+.req-item{display:flex;align-items:flex-start;gap:11px;padding:14px;background:var(--y50);border-radius:13px;border:1.5px solid var(--y200);margin-bottom:9px;}
+.req-item:last-child{margin-bottom:0;}
+.req-body{flex:1;min-width:0;}
+.req-who{font-size:14px;font-weight:800;margin-bottom:2px;}
+.req-what{font-size:13px;color:#57534e;margin-bottom:5px;}
+.req-detail{display:flex;gap:7px;flex-wrap:wrap;}
+.req-acts{display:flex;gap:5px;flex-direction:column;flex-shrink:0;}
+.btn-approve{background:linear-gradient(135deg,var(--y400),var(--o400));color:#fff;border:none;border-radius:9px;padding:8px 12px;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit;}
+.btn-reject{background:#fff1f2;border:1.5px solid #fecdd3;color:#e11d48;border-radius:9px;padding:7px 12px;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit;}
+
+/* ── TAGS ── */
+.tag{font-size:11px;padding:2px 8px;border-radius:20px;font-weight:700;}
+.tag-p{background:#fef3c7;color:#92400e;border:1px solid #fde68a;}
+.tag-ok{background:#dcfce7;color:#166534;border:1px solid #bbf7d0;}
+.tag-no{background:#fff1f2;color:#be123c;border:1px solid #fecdd3;}
+.tag-a{background:var(--y100);color:var(--y700);border:1px solid var(--y200);}
+
+/* ── EMPTY ── */
+.empty{text-align:center;padding:26px 0;color:var(--wg);}
+.empty .ei{font-size:34px;margin-bottom:8px;opacity:.5;}
+.empty p{font-size:13px;}
+
+/* ── LOGOUT ── */
+.btn-logout{width:100%;padding:13px;background:#fff1f2;border:2px solid #fecdd3;border-radius:13px;color:#e11d48;font-size:14px;font-weight:700;cursor:pointer;font-family:inherit;transition:all .2s;margin-top:4px;}
+.btn-logout:hover{background:#fecdd3;}
+
+/* ── TOAST ── */
+#toast{position:fixed;bottom:86px;left:50%;transform:translateX(-50%) translateY(14px);background:var(--dark);color:#fff;padding:11px 22px;border-radius:40px;font-size:14px;font-weight:700;z-index:300;opacity:0;transition:all .3s;white-space:nowrap;pointer-events:none;}
+#toast.show{opacity:1;transform:translateX(-50%) translateY(0);}
+
+/* ── GIVE COINS INLINE ── */
+.give-row{display:flex;gap:8px;}
+.give-row input{flex:1;}
+.give-row .btn-p{width:auto;padding:12px 16px;font-size:14px;}
+
+/* ── GMAIL STATUS ── */
+.gmail-status{display:flex;align-items:center;gap:10px;background:var(--y50);border:1.5px solid var(--y200);border-radius:13px;padding:14px;margin-top:8px;}
+.gmail-status .gs-icon{font-size:22px;}
+.gmail-status .gs-body{flex:1;}
+.gmail-status .gs-title{font-size:13px;font-weight:700;margin-bottom:2px;}
+.gmail-status .gs-val{font-size:12px;color:var(--wg);}
+.gmail-status.connected{border-color:#bbf7d0;background:#f0fdf4;}
+.gmail-status.connected .gs-title{color:#166534;}
+
+@media(max-width:480px){
+  .shop-grid{grid-template-columns:1fr;}
+  .auth-card{padding:30px 20px;}
+  .hero-card .ba{font-size:34px;}
+  .admin-actions{grid-template-columns:1fr 1fr;}
+  .mc{padding:22px;}
+}
+</style>
+</head>
+<body>
+
+<!-- ═══════════════ AUTH ═══════════════ -->
+<div id="auth-screen" class="screen active">
+  <div class="auth-card">
+    <div class="auth-logo">
+      <span class="ci">🐱</span>
+      <h1>Cat Coin</h1>
+      <p>고양이와 함께하는 코인 관리 시스템</p>
+    </div>
+    <div class="auth-tabs">
+      <button class="auth-tab active" onclick="switchAuthTab('login')">로그인</button>
+      <button class="auth-tab" onclick="switchAuthTab('register')">회원가입</button>
+    </div>
+    <div id="login-form">
+      <div class="fg"><label>아이디</label><input type="text" id="lid" placeholder="아이디 입력"></div>
+      <div class="fg"><label>비밀번호</label><input type="password" id="lpw" placeholder="비밀번호 입력" onkeydown="if(event.key==='Enter')doLogin()"></div>
+      <button class="btn-p" onclick="doLogin()">🚀 로그인</button>
+    </div>
+    <div id="register-form" style="display:none">
+      <div class="fg"><label>아이디</label><input type="text" id="rid" placeholder="사용할 아이디"></div>
+      <div class="fg"><label>닉네임</label><input type="text" id="rname" placeholder="닉네임"></div>
+      <div class="fg"><label>비밀번호</label><input type="password" id="rpw" placeholder="비밀번호"></div>
+      <button class="btn-p" onclick="doRegister()">✨ 회원가입</button>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════ 2FA Gmail 인증 모달 ═══════════════ -->
+<div id="tfa-modal" class="mo" style="display:none">
+  <div class="mc" style="max-width:400px">
+    <h3>🔐 Gmail 2단계 인증</h3>
+    <div class="gmail-box">
+      <div class="gicon">📧</div>
+      <h4>인증 코드 확인</h4>
+      <p>등록된 Gmail 주소로<br>발송된 인증 코드를 입력해 주세요.</p>
+    </div>
+    <div class="fg">
+      <label>Gmail 인증 코드 (6자리)</label>
+      <div class="gmail-input-wrap">
+        <input type="text" id="tfa-code" placeholder="코드 입력" maxlength="6" onkeydown="if(event.key==='Enter')verifyTFA()">
+        <button class="btn-p" onclick="verifyTFA()">확인 ✓</button>
+      </div>
+    </div>
+    <p style="font-size:12px;color:var(--wg);text-align:center;margin-top:8px">코드가 오지 않으면 스팸 메일함을 확인하세요</p>
+    <div class="mc-act" style="margin-top:14px">
+      <button class="btn-s" onclick="closeTFA()">취소</button>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════ UNIVERSAL MODAL ═══════════════ -->
+<div id="umodal" class="mo" style="display:none">
+  <div class="mc">
+    <h3 id="um-title"></h3>
+    <div id="um-body"></div>
+    <div class="mc-act" id="um-acts"></div>
+  </div>
+</div>
+
+<!-- ═══════════════ APP ═══════════════ -->
+<div id="app-screen" class="screen" style="flex-direction:column;">
+  <header class="app-header">
+    <div class="hlogo"><span>🐱</span> Cat Coin</div>
+    <div class="hcoin">🪙 <span id="hbal">0</span></div>
+  </header>
+
+  <!-- ── TAB 1: DASHBOARD ── -->
+  <div id="tab-dashboard" class="tc active">
+    <div class="hero-card">
+      <div class="gr">안녕하세요 👋</div>
+      <div class="un" id="dash-uname">사용자</div>
+      <div class="bl">보유 Cat Coin</div>
+      <div class="ba"><span>🪙</span><span id="dash-bal">0</span></div>
+      <div id="admin-badge-wrap" style="display:none"><div class="ab">👑 관리자 — 권오성</div></div>
+    </div>
+    <div id="admin-quick" style="display:none">
+      <div class="admin-actions">
+        <button class="btn-adm" onclick="openModal('notice')">📢 공지 등록</button>
+        <button class="btn-adm" onclick="openModal('mission')">🎯 미션 등록</button>
+        <button class="btn-adm" onclick="openModal('shop')">🛒 상품 등록</button>
+        <button class="btn-adm" onclick="switchTabTo('admin')">📋 검토 대기</button>
+        <button class="btn-adm" onclick="switchTabTo('admin')">👥 멤버 관리</button>
+        <button class="btn-adm" onclick="switchTabTo('admin')">💸 코인 지급</button>
+      </div>
+    </div>
+    <div class="card">
+      <div class="ct">📣 권오성의 공지사항 <span class="badge" id="notice-badge">0</span></div>
+      <div id="notice-list"><div class="empty"><div class="ei">📭</div><p>등록된 공지사항이 없습니다.</p></div></div>
+    </div>
+  </div>
+
+  <!-- ── TAB 2: MISSION & SHOP ── -->
+  <div id="tab-mission" class="tc">
+    <div class="card">
+      <div class="ct">🎯 미션 보드 <span class="badge" id="mission-badge">0</span></div>
+      <div id="mission-list"></div>
+    </div>
+    <div class="card">
+      <div class="ct">📋 내 완료 신청 현황</div>
+      <div id="my-req-list"></div>
+    </div>
+    <div class="card">
+      <div class="ct">🛒 코인 상점 <span class="badge" id="shop-badge">0</span></div>
+      <div class="shop-grid" id="shop-grid"></div>
+    </div>
+  </div>
+
+  <!-- ── TAB 3: PROFILE ── -->
+  <div id="tab-profile" class="tc">
+    <div class="card">
+      <div class="p-avatar">🐱</div>
+      <div class="p-name" id="pname"></div>
+      <div class="p-id" id="pid"></div>
+      <div class="p-stats">
+        <div class="stat-box"><div class="sv" id="pbal">0</div><div class="sl">🪙 Cat Coin</div></div>
+        <div class="stat-box"><div class="sv" id="pmis">0</div><div class="sl">✅ 완료 미션</div></div>
+      </div>
+    </div>
+    <div class="card">
+      <div class="ct">⚙️ 보안 설정</div>
+      <div class="sr">
+        <div>
+          <div class="si-title">🔐 2단계 인증 (Gmail)</div>
+          <div class="si-sub">로그인 시 Gmail 인증 코드 요구</div>
+        </div>
+        <label class="tgl"><input type="checkbox" id="tfa-toggle" onchange="toggle2FA()"><span class="tgl-s"></span></label>
+      </div>
+      <div id="gmail-status-wrap"></div>
+    </div>
+    <div class="card">
+      <div class="ct">🔔 알림 설정</div>
+      <div class="sr">
+        <div><div class="si-title">미션 보상 알림</div><div class="si-sub">미션 승인/반려 시 알림</div></div>
+        <label class="tgl"><input type="checkbox" id="notif-toggle" checked><span class="tgl-s"></span></label>
+      </div>
+      <div class="sr">
+        <div><div class="si-title">공지사항 알림</div><div class="si-sub">새 공지사항 등록 시 알림</div></div>
+        <label class="tgl"><input type="checkbox" id="notice-toggle" checked><span class="tgl-s"></span></label>
+      </div>
+    </div>
+    <button class="btn-logout" onclick="doLogout()">🚪 로그아웃</button>
+  </div>
+
+  <!-- ── TAB 4: ADMIN ── -->
+  <div id="tab-admin" class="tc">
+    <!-- 검토 대기 -->
+    <div class="card">
+      <div class="ct">⏳ 미션 완료 검토 대기 <span class="badge" id="pending-badge">0</span></div>
+      <div id="pending-list"></div>
+    </div>
+    <!-- 코인 직접 지급 -->
+    <div class="card">
+      <div class="ct">💸 코인 직접 지급</div>
+      <div class="fg"><label>대상 멤버</label><select id="give-target"></select></div>
+      <div class="fg"><label>지급 코인 수</label>
+        <div class="give-row">
+          <input type="number" id="give-amount" placeholder="예: 100" min="1">
+          <button class="btn-p" onclick="giveCoins()">🪙 지급</button>
+        </div>
+      </div>
+      <div class="fg" style="margin-bottom:0"><label>메모 (선택)</label><input type="text" id="give-memo" placeholder="지급 사유"></div>
+    </div>
+    <!-- 멤버 관리 -->
+    <div class="card">
+      <div class="ct">👥 멤버 관리 <span class="badge" id="member-badge">0</span></div>
+      <div id="member-list"></div>
+    </div>
+  </div>
+
+  <!-- BOTTOM NAV -->
+  <nav class="tab-nav">
+    <button class="tb active" id="tnav-dashboard" onclick="switchTabTo('dashboard',this)">
+      <div class="tind"></div><span class="ti">🏠</span><span class="tl">대시보드</span>
+    </button>
+    <button class="tb" id="tnav-mission" onclick="switchTabTo('mission',this)">
+      <div class="tind"></div><span class="ti">🎯</span><span class="tl">미션/상점</span>
+    </button>
+    <button class="tb" id="tnav-profile" onclick="switchTabTo('profile',this)">
+      <div class="tind"></div><span class="ti">👤</span><span class="tl">프로필</span>
+    </button>
+    <button class="tb" id="tnav-admin" style="display:none" onclick="switchTabTo('admin',this)">
+      <div class="tind"></div><span class="ti">👑</span><span class="tl">관리</span>
+    </button>
+  </nav>
+</div>
+
+<div id="toast"></div>
+
+<script>
+// ═══════════════════════════════════════════════════════
+// ⚡ FIREBASE CONFIG SKELETON
+// ═══════════════════════════════════════════════════════
+/*
+import { initializeApp } from "firebase/app";
+import { getDatabase, ref, set, onValue, push, update, remove } from "firebase/database";
+
+const firebaseConfig = {
+  apiKey: "YOUR_API_KEY",
+  authDomain: "YOUR_AUTH_DOMAIN",
+  databaseURL: "YOUR_DATABASE_URL",
+  projectId: "YOUR_PROJECT_ID",
+  storageBucket: "YOUR_STORAGE_BUCKET",
+  messagingSenderId: "YOUR_SENDER_ID",
+  appId: "YOUR_APP_ID"
+};
+const app = initializeApp(firebaseConfig);
+const db = getDatabase(app);
+
+// 실시간 데이터 연동 예시:
+// onValue(ref(db,'notices'), snap => renderNotices(Object.values(snap.val()||{})));
+// push(ref(db,'mission_requests'), reqData);
+// update(ref(db,'users/'+uid), {coins: newVal});
+// remove(ref(db,'users/'+uid));
+*/
+
+// ═══════════════════════════════════════════════════════
+// 📦 STATE
+// ═══════════════════════════════════════════════════════
+const S = {
+  users: {
+    admin: { id:'admin', name:'권오성', pw:'admin123', coins:9999, is_admin:true, two_fa:false, gmail:'', completed:[], joinDate:'2025-01-01' },
+    user1: { id:'user1', name:'김냥이',  pw:'1234',     coins:350,  is_admin:false, two_fa:false, gmail:'', completed:[], joinDate:'2025-03-15' },
+    user2: { id:'user2', name:'이고양',  pw:'1234',     coins:120,  is_admin:false, two_fa:false, gmail:'', completed:[], joinDate:'2025-04-02' },
+  },
+  notices: [],
+  missions: [
+    { id:'m1', title:'출석 체크',   desc:'오늘 하루 출석하기',         reward:10,  icon:'📅' },
+    { id:'m2', title:'친구 초대',   desc:'친구를 Cat Coin에 초대하기', reward:50,  icon:'👥' },
+    { id:'m3', title:'미션 5개 완료', desc:'누적 미션 5개 달성',        reward:100, icon:'🏆' },
+    { id:'m4', title:'프로필 꾸미기', desc:'프로필 설정 완료하기',       reward:20,  icon:'✏️' },
+  ],
+  shop: [
+    { id:'s1', name:'고양이 간식',  desc:'참치맛 간식 한 봉지',           price:100, icon:'🐟' },
+    { id:'s2', name:'고양이 장난감', desc:'낚싯대형 인터랙티브 장난감',  price:200, icon:'🎣' },
+    { id:'s3', name:'고급 캣타워', desc:'5단 고급 수제 캣타워',           price:500, icon:'🏰' },
+    { id:'s4', name:'고양이 침대',  desc:'따뜻한 도넛형 방석 침대',      price:300, icon:'🛏️' },
+  ],
+  requests: [],
+  cur: null,
+  pending2fa: null,
+};
+
+// ═══════════════════════════════════════════════════════
+// 🔐 AUTH
+// ═══════════════════════════════════════════════════════
+function switchAuthTab(t) {
+  document.querySelectorAll('.auth-tab').forEach((b,i)=>b.classList.toggle('active',(i===0&&t==='login')||(i===1&&t==='register')));
+  g('login-form').style.display = t==='login'?'block':'none';
+  g('register-form').style.display = t==='register'?'block':'none';
+}
+
+function doLogin() {
+  const id=v('lid'), pw=v('lpw');
+  if(!id||!pw){toast('⚠️ 아이디와 비밀번호를 입력하세요');return;}
+  const u=S.users[id];
+  if(!u||u.pw!==pw){toast('❌ 아이디 또는 비밀번호가 틀렸습니다');return;}
+  if(u.two_fa && u.gmail){
+    S.pending2fa=u;
+    // 실제 구현: Firebase Functions 등으로 Gmail 발송
+    // 데모에서는 코드 없이 "이미 발송됨" 상태만 표시
+    g('tfa-code').value='';
+    g('tfa-modal').style.display='flex';
+    setTimeout(()=>g('tfa-code').focus(),100);
+  } else {
+    loginOK(u);
+  }
+}
+
+function verifyTFA() {
+  const code = v('tfa-code');
+  if(!code){toast('⚠️ 인증 코드를 입력하세요');return;}
+  // 실제: Firebase Functions에서 발송한 코드와 서버 측 비교
+  // 데모: 입력값이 있으면 통과 (실제 서비스에서는 절대 이렇게 하지 마세요)
+  if(code.length===6 && /^\d{6}$/.test(code)){
+    g('tfa-modal').style.display='none';
+    loginOK(S.pending2fa);
+  } else {
+    toast('❌ 6자리 숫자 코드를 입력해 주세요');
+  }
+}
+
+function closeTFA(){g('tfa-modal').style.display='none';S.pending2fa=null;}
+
+function doRegister() {
+  const id=v('rid'), name=v('rname'), pw=v('rpw');
+  if(!id||!name||!pw){toast('⚠️ 모든 항목을 입력하세요');return;}
+  if(S.users[id]){toast('❌ 이미 사용 중인 아이디입니다');return;}
+  S.users[id]={id,name,pw,coins:100,is_admin:false,two_fa:false,gmail:'',completed:[],joinDate:today()};
+  toast('🎉 가입 완료! 100 코인을 드렸어요~');
+  switchAuthTab('login');
+  g('lid').value=id;
+}
+
+function loginOK(u) {
+  S.cur=u; S.pending2fa=null;
+  g('auth-screen').classList.remove('active');
+  g('app-screen').classList.add('active');
+  renderAll();
+  toast(`🐱 ${u.name}님, 환영합니다!`);
+}
+
+function doLogout() {
+  S.cur=null;
+  g('app-screen').classList.remove('active');
+  g('auth-screen').classList.add('active');
+  g('lid').value=''; g('lpw').value='';
+  // reset to dashboard tab
+  document.querySelectorAll('.tc').forEach(t=>t.classList.remove('active'));
+  document.querySelectorAll('.tb').forEach(b=>b.classList.remove('active'));
+  g('tab-dashboard').classList.add('active');
+  g('tnav-dashboard').classList.add('active');
+  toast('👋 로그아웃 되었습니다');
+}
+
+// ═══════════════════════════════════════════════════════
+// 🎨 RENDER ALL
+// ═══════════════════════════════════════════════════════
+function renderAll() {
+  const u=S.cur; if(!u)return;
+  const isAdmin=u.is_admin;
+
+  g('hbal').textContent=u.coins.toLocaleString();
+  g('dash-uname').textContent=u.name;
+  g('dash-bal').textContent=u.coins.toLocaleString();
+  g('admin-badge-wrap').style.display=isAdmin?'block':'none';
+  g('admin-quick').style.display=isAdmin?'block':'none';
+  g('tnav-admin').style.display=isAdmin?'flex':'none';
+
+  g('pname').textContent=u.name;
+  g('pid').textContent='@'+u.id;
+  g('pbal').textContent=u.coins.toLocaleString();
+  g('pmis').textContent=(u.completed||[]).length;
+  g('tfa-toggle').checked=u.two_fa;
+  renderGmailStatus();
+
+  renderNotices(); renderMissions(); renderShop(); renderMyReqs();
+  if(isAdmin){renderPending();renderMembers();fillGiveTarget();}
+}
+
+function refreshBal() {
+  const u=S.cur; if(!u)return;
+  g('hbal').textContent=u.coins.toLocaleString();
+  g('dash-bal').textContent=u.coins.toLocaleString();
+  g('pbal').textContent=u.coins.toLocaleString();
+}
+
+// ═══════════════════════════════════════════════════════
+// 📣 NOTICES
+// ═══════════════════════════════════════════════════════
+function renderNotices() {
+  const isAdmin=S.cur?.is_admin;
+  g('notice-badge').textContent=S.notices.length;
+  if(!S.notices.length){g('notice-list').innerHTML=emptyHTML('📭','등록된 공지사항이 없습니다.');return;}
+  g('notice-list').innerHTML=[...S.notices].reverse().map((n,i)=>`
+    <div class="notice-item">
+      <div class="nnum">${S.notices.length-i}</div>
+      <div class="nbody">
+        <div class="ntitle">${esc(n.title)}</div>
+        <div class="ndate">📅 ${n.date} · 권오성</div>
+        <div class="ncontent">${esc(n.content)}</div>
+      </div>
+      ${isAdmin?`<div class="n-admin-btns">
+        <button class="btn-sm edit" onclick="editNotice('${n.id}')">✏️</button>
+        <button class="btn-sm del" onclick="deleteNotice('${n.id}')">🗑️</button>
+      </div>`:''}
+    </div>`).join('');
+}
+
+function editNotice(nid) {
+  const n=S.notices.find(x=>x.id===nid); if(!n)return;
+  openModal('editNotice',nid);
+}
+function deleteNotice(nid) {
+  if(!confirm('이 공지사항을 삭제하시겠어요?'))return;
+  S.notices=S.notices.filter(x=>x.id!==nid);
+  toast('🗑️ 공지사항이 삭제되었습니다'); renderNotices();
+}
+
+// ═══════════════════════════════════════════════════════
+// 🎯 MISSIONS
+// ═══════════════════════════════════════════════════════
+function renderMissions() {
+  const u=S.cur; const isAdmin=u?.is_admin;
+  g('mission-badge').textContent=S.missions.length;
+  if(!S.missions.length){g('mission-list').innerHTML=emptyHTML('🗂️','등록된 미션이 없습니다.');return;}
+  g('mission-list').innerHTML=S.missions.map(m=>{
+    const done=(u.completed||[]).includes(m.id);
+    const pending=S.requests.some(r=>r.userId===u.id&&r.missionId===m.id&&r.status==='pending');
+    const rejected=S.requests.some(r=>r.userId===u.id&&r.missionId===m.id&&r.status==='rejected');
+    let btn='';
+    if(!isAdmin){
+      if(done) btn='<button class="btn-mi" disabled>✅ 완료됨</button>';
+      else if(pending) btn='<button class="btn-mi" disabled>⏳ 검토중</button>';
+      else btn=`<button class="btn-mi" onclick="reqMission('${m.id}')">신청하기</button>`;
+    }
+    const adminBtns=isAdmin?`<div class="mi-admin-btns">
+      <button class="btn-sm edit" onclick="editMission('${m.id}')">✏️</button>
+      <button class="btn-sm del" onclick="deleteMission('${m.id}')">🗑️</button>
+    </div>`:'';
+    return `<div class="mi-item">
+      <div class="miicon">${m.icon}</div>
+      <div class="mibody"><div class="miname">${esc(m.title)}</div><div class="midesc">${esc(m.desc)}</div></div>
+      <div class="mirwd">🪙 ${m.reward}</div>
+      ${btn}${adminBtns}
+    </div>`;
+  }).join('');
+}
+
+function editMission(mid) { openModal('editMission',mid); }
+function deleteMission(mid) {
+  const m=S.missions.find(x=>x.id===mid);
+  if(!confirm(`'${m?.title}' 미션을 삭제하시겠어요?`))return;
+  S.missions=S.missions.filter(x=>x.id!==mid);
+  toast('🗑️ 미션이 삭제되었습니다'); renderMissions();
+}
+
+function reqMission(mId) {
+  const u=S.cur; const m=S.missions.find(x=>x.id===mId); if(!m)return;
+  const oldIdx=S.requests.findIndex(r=>r.userId===u.id&&r.missionId===mId&&r.status==='rejected');
+  if(oldIdx>=0)S.requests.splice(oldIdx,1);
+  S.requests.push({id:'req'+Date.now(),userId:u.id,userName:u.name,missionId:mId,missionName:m.title,reward:m.reward,status:'pending',submittedAt:today(),reviewNote:''});
+  toast('📨 미션 완료 신청이 접수되었습니다!');
+  renderMissions(); renderMyReqs();
+  if(S.cur?.is_admin)renderPending();
+}
+
+function renderMyReqs() {
+  const u=S.cur; const mine=S.requests.filter(r=>r.userId===u.id);
+  if(!mine.length){g('my-req-list').innerHTML=emptyHTML('📝','신청한 미션이 없습니다.');return;}
+  g('my-req-list').innerHTML=mine.map(r=>{
+    const icon=S.missions.find(x=>x.id===r.missionId)?.icon||'🎯';
+    const tag=r.status==='approved'?'<span class="tag tag-ok">✅ 승인됨</span>':
+               r.status==='rejected'?'<span class="tag tag-no">❌ 반려</span>':
+               '<span class="tag tag-p">⏳ 검토중</span>';
+    const note=r.reviewNote?`<div style="font-size:12px;color:var(--wg);margin-top:4px">💬 ${esc(r.reviewNote)}</div>`:'';
+    return `<div class="mi-item">
+      <div class="miicon">${icon}</div>
+      <div class="mibody"><div class="miname">${esc(r.missionName)}</div><div class="midesc">🪙 ${r.reward} · ${r.submittedAt}</div>${note}</div>
+      ${tag}
+    </div>`;
+  }).join('');
+}
+
+// ═══════════════════════════════════════════════════════
+// 🛒 SHOP
+// ═══════════════════════════════════════════════════════
+function renderShop() {
+  const isAdmin=S.cur?.is_admin;
+  g('shop-badge').textContent=S.shop.length;
+  if(!S.shop.length){g('shop-grid').innerHTML=`<div class="empty" style="grid-column:span 2"><div class="ei">🛒</div><p>등록된 상품이 없습니다.</p></div>`;return;}
+  g('shop-grid').innerHTML=S.shop.map(item=>`
+    <div class="shop-item">
+      <div class="si-icon">${item.icon}</div>
+      <div class="si-name">${esc(item.name)}</div>
+      <div class="si-desc">${esc(item.desc)}</div>
+      <div class="si-price">🪙 ${item.price}</div>
+      ${!isAdmin?`<button class="btn-buy" onclick="buyItem('${item.id}')">구매하기</button>`:'<button class="btn-buy" disabled>관리자</button>'}
+      ${isAdmin?`<div class="shop-admin-btns">
+        <button class="btn-sm edit" onclick="editShop('${item.id}')">✏️ 수정</button>
+        <button class="btn-sm del" onclick="deleteShop('${item.id}')">🗑️ 삭제</button>
+      </div>`:''}
+    </div>`).join('');
+}
+
+function buyItem(id) {
+  const item=S.shop.find(x=>x.id===id); if(!item)return;
+  const u=S.cur;
+  if(u.coins<item.price){toast('🪙 코인이 부족합니다!');return;}
+  if(!confirm(`${item.icon} ${item.name}을(를) 🪙${item.price}에 구매하시겠어요?`))return;
+  u.coins-=item.price; S.users[u.id].coins=u.coins;
+  refreshBal(); toast(`${item.icon} ${item.name} 구매 완료! -🪙${item.price}`);
+}
+
+function editShop(sid) { openModal('editShop',sid); }
+function deleteShop(sid) {
+  const item=S.shop.find(x=>x.id===sid);
+  if(!confirm(`'${item?.name}' 상품을 삭제하시겠어요?`))return;
+  S.shop=S.shop.filter(x=>x.id!==sid);
+  toast('🗑️ 상품이 삭제되었습니다'); renderShop();
+}
+
+// ═══════════════════════════════════════════════════════
+// ⚙️ 2FA / GMAIL
+// ═══════════════════════════════════════════════════════
+function toggle2FA() {
+  const u=S.cur; const on=g('tfa-toggle').checked;
+  if(on && !u.gmail){
+    // Gmail 미등록 → 먼저 Gmail 입력 유도
+    g('tfa-toggle').checked=false;
+    openModal('registerGmail');
+    return;
+  }
+  u.two_fa=on; S.users[u.id].two_fa=on;
+  toast(on?'🔐 2단계 인증이 활성화되었습니다':'🔓 2단계 인증이 비활성화되었습니다');
+  renderGmailStatus();
+}
+
+function renderGmailStatus() {
+  const u=S.cur; if(!u)return;
+  const wrap=g('gmail-status-wrap');
+  if(!u.gmail){
+    wrap.innerHTML=`<div class="gmail-status">
+      <div class="gs-icon">📧</div>
+      <div class="gs-body"><div class="gs-title">Gmail 미등록</div><div class="gs-val">2단계 인증을 사용하려면 Gmail을 먼저 등록하세요</div></div>
+      <button class="btn-sm edit" onclick="openModal('registerGmail')">등록</button>
+    </div>`;
+  } else {
+    wrap.innerHTML=`<div class="gmail-status ${u.two_fa?'connected':''}">
+      <div class="gs-icon">${u.two_fa?'✅':'📧'}</div>
+      <div class="gs-body"><div class="gs-title">${u.two_fa?'2단계 인증 활성화됨':'Gmail 등록됨 (비활성)'}</div><div class="gs-val">${esc(u.gmail)}</div></div>
+      <button class="btn-sm edit" onclick="openModal('registerGmail')">변경</button>
+    </div>`;
+  }
+}
+
+// ═══════════════════════════════════════════════════════
+// 👑 ADMIN — PENDING
+// ═══════════════════════════════════════════════════════
+function renderPending() {
+  const pending=S.requests.filter(r=>r.status==='pending');
+  g('pending-badge').textContent=pending.length;
+  if(!pending.length){g('pending-list').innerHTML=emptyHTML('📋','검토 대기 중인 신청이 없습니다.');return;}
+  g('pending-list').innerHTML=pending.map(r=>{
+    const icon=S.missions.find(x=>x.id===r.missionId)?.icon||'🎯';
+    return `<div class="req-item">
+      <div style="font-size:26px;flex-shrink:0">${icon}</div>
+      <div class="req-body">
+        <div class="req-who">👤 ${esc(r.userName)}</div>
+        <div class="req-what">📌 ${esc(r.missionName)}</div>
+        <div class="req-detail">
+          <span class="tag tag-a">🪙 보상 ${r.reward}개</span>
+          <span style="font-size:12px;color:var(--wg)">${r.submittedAt}</span>
+        </div>
+      </div>
+      <div class="req-acts">
+        <button class="btn-approve" onclick="approveReq('${r.id}')">✅ 승인</button>
+        <button class="btn-reject" onclick="openModal('reject','${r.id}')">❌ 반려</button>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function approveReq(reqId) {
+  const req=S.requests.find(r=>r.id===reqId); if(!req)return;
+  req.status='approved';
+  const tu=S.users[req.userId];
+  if(tu){
+    tu.coins+=req.reward;
+    if(!tu.completed)tu.completed=[];
+    tu.completed.push(req.missionId);
+    if(S.cur?.id===req.userId){S.cur.coins=tu.coins;S.cur.completed=tu.completed;refreshBal();g('pmis').textContent=S.cur.completed.length;}
+  }
+  toast(`✅ ${req.userName}님 미션 승인 → 🪙${req.reward} 지급!`);
+  renderPending(); renderMissions(); renderMyReqs(); renderMembers(); fillGiveTarget();
+}
+
+function confirmReject(reqId) {
+  const note=g('reject-note').value.trim();
+  const req=S.requests.find(r=>r.id===reqId); if(!req)return;
+  req.status='rejected'; req.reviewNote=note;
+  toast(`❌ ${req.userName}님의 신청을 반려했습니다`);
+  closeModal(); renderPending(); renderMissions(); renderMyReqs();
+}
+
+// ═══════════════════════════════════════════════════════
+// 👑 ADMIN — GIVE COINS
+// ═══════════════════════════════════════════════════════
+function fillGiveTarget() {
+  const sel=g('give-target');
+  const members=Object.values(S.users).filter(u=>!u.is_admin);
+  sel.innerHTML=members.map(u=>`<option value="${u.id}">${u.name} (@${u.id}) — 🪙${u.coins.toLocaleString()}</option>`).join('');
+}
+
+function giveCoins() {
+  const tid=g('give-target').value;
+  const amount=parseInt(g('give-amount').value)||0;
+  const memo=g('give-memo').value.trim();
+  if(!tid){toast('⚠️ 대상 멤버를 선택하세요');return;}
+  if(amount<=0){toast('⚠️ 지급할 코인 수를 입력하세요');return;}
+  const tu=S.users[tid]; if(!tu)return;
+  tu.coins+=amount;
+  if(S.cur?.id===tid){S.cur.coins=tu.coins;refreshBal();}
+  toast(`🪙 ${tu.name}님에게 ${amount} 코인 지급 완료!`);
+  g('give-amount').value=''; g('give-memo').value='';
+  fillGiveTarget(); renderMembers();
+}
+
+// ═══════════════════════════════════════════════════════
+// 👑 ADMIN — MEMBERS
+// ═══════════════════════════════════════════════════════
+function renderMembers() {
+  const members=Object.values(S.users);
+  g('member-badge').textContent=members.length;
+  g('member-list').innerHTML=members.map(u=>`
+    <div class="member-item">
+      <div class="m-avatar">${u.is_admin?'👑':'🐱'}</div>
+      <div class="m-info">
+        <div class="m-name">${esc(u.name)} ${u.is_admin?'<span class="tag tag-a">관리자</span>':''}</div>
+        <div class="m-meta">@${u.id} · 가입 ${u.joinDate} · 미션 ${(u.completed||[]).length}개 완료</div>
+      </div>
+      <div class="m-coin">🪙 ${u.coins.toLocaleString()}</div>
+      <div class="m-actions">
+        ${!u.is_admin?`<button class="btn-sm give" onclick="openModal('quickgive','${u.id}')">+코인</button>`:''}
+        <button class="btn-sm edit" onclick="openModal('editMember','${u.id}')">수정</button>
+        ${!u.is_admin?`<button class="btn-sm del" onclick="kickMember('${u.id}')">탈퇴</button>`:''}
+      </div>
+    </div>`).join('');
+}
+
+function kickMember(uid) {
+  const u=S.users[uid]; if(!u)return;
+  if(!confirm(`⚠️ '${u.name}'(@${u.id}) 멤버를 탈퇴 처리할까요?\n보유 코인: 🪙${u.coins}\n\n이 작업은 되돌릴 수 없습니다.`))return;
+  delete S.users[uid];
+  // 해당 멤버의 요청도 정리
+  S.requests=S.requests.filter(r=>r.userId!==uid);
+  toast(`🗑️ ${u.name}님이 탈퇴 처리되었습니다`);
+  renderMembers(); fillGiveTarget(); renderPending();
+}
+
+// ═══════════════════════════════════════════════════════
+// 🪟 UNIVERSAL MODAL
+// ═══════════════════════════════════════════════════════
+function openModal(type, payload) {
+  const modal=g('umodal'), title=g('um-title'), body=g('um-body'), acts=g('um-acts');
+  modal.style.display='flex';
+
+  if(type==='notice'){
+    title.textContent='📢 공지사항 등록';
+    body.innerHTML=`
+      <div class="fg"><label>제목</label><input type="text" id="am-title" placeholder="공지사항 제목"></div>
+      <div class="fg"><label>내용</label><textarea id="am-content" placeholder="공지사항 내용을 입력하세요"></textarea></div>`;
+    acts.innerHTML=`<button class="btn-s" onclick="closeModal()">취소</button><button class="btn-p" onclick="submitNotice()">등록하기 ✓</button>`;
+  }
+  else if(type==='editNotice'){
+    const n=S.notices.find(x=>x.id===payload);
+    title.textContent='✏️ 공지사항 수정';
+    body.innerHTML=`
+      <div class="fg"><label>제목</label><input type="text" id="am-title" value="${esc(n.title)}"></div>
+      <div class="fg"><label>내용</label><textarea id="am-content">${esc(n.content)}</textarea></div>`;
+    acts.innerHTML=`<button class="btn-s" onclick="closeModal()">취소</button><button class="btn-p" onclick="saveNotice('${payload}')">저장하기 ✓</button>`;
+  }
+  else if(type==='mission'){
+    title.textContent='🎯 미션 등록';
+    body.innerHTML=`
+      <div class="fg"><label>미션명</label><input type="text" id="am-name" placeholder="미션 이름"></div>
+      <div class="fg"><label>설명</label><input type="text" id="am-desc" placeholder="미션 설명"></div>
+      <div class="fg"><label>아이콘 (이모지)</label><input type="text" id="am-icon" placeholder="🎯" maxlength="4"></div>
+      <div class="fg"><label>보상 코인</label><input type="number" id="am-reward" placeholder="50" min="1"></div>`;
+    acts.innerHTML=`<button class="btn-s" onclick="closeModal()">취소</button><button class="btn-p" onclick="submitMission()">등록하기 ✓</button>`;
+  }
+  else if(type==='editMission'){
+    const m=S.missions.find(x=>x.id===payload);
+    title.textContent='✏️ 미션 수정';
+    body.innerHTML=`
+      <div class="fg"><label>미션명</label><input type="text" id="am-name" value="${esc(m.title)}"></div>
+      <div class="fg"><label>설명</label><input type="text" id="am-desc" value="${esc(m.desc)}"></div>
+      <div class="fg"><label>아이콘</label><input type="text" id="am-icon" value="${m.icon}" maxlength="4"></div>
+      <div class="fg"><label>보상 코인</label><input type="number" id="am-reward" value="${m.reward}" min="1"></div>`;
+    acts.innerHTML=`<button class="btn-s" onclick="closeModal()">취소</button><button class="btn-p" onclick="saveMission('${payload}')">저장하기 ✓</button>`;
+  }
+  else if(type==='shop'){
+    title.textContent='🛒 상품 등록';
+    body.innerHTML=`
+      <div class="fg"><label>상품명</label><input type="text" id="sh-name" placeholder="상품 이름"></div>
+      <div class="fg"><label>설명</label><input type="text" id="sh-desc" placeholder="상품 설명"></div>
+      <div class="fg"><label>아이콘 (이모지)</label><input type="text" id="sh-icon" placeholder="🎁" maxlength="4"></div>
+      <div class="fg"><label>가격 (코인)</label><input type="number" id="sh-price" placeholder="100" min="1"></div>`;
+    acts.innerHTML=`<button class="btn-s" onclick="closeModal()">취소</button><button class="btn-p" onclick="submitShop()">등록하기 ✓</button>`;
+  }
+  else if(type==='editShop'){
+    const item=S.shop.find(x=>x.id===payload);
+    title.textContent='✏️ 상품 수정';
+    body.innerHTML=`
+      <div class="fg"><label>상품명</label><input type="text" id="sh-name" value="${esc(item.name)}"></div>
+      <div class="fg"><label>설명</label><input type="text" id="sh-desc" value="${esc(item.desc)}"></div>
+      <div class="fg"><label>아이콘</label><input type="text" id="sh-icon" value="${item.icon}" maxlength="4"></div>
+      <div class="fg"><label>가격 (코인)</label><input type="number" id="sh-price" value="${item.price}" min="1"></div>`;
+    acts.innerHTML=`<button class="btn-s" onclick="closeModal()">취소</button><button class="btn-p" onclick="saveShop('${payload}')">저장하기 ✓</button>`;
+  }
+  else if(type==='reject'){
+    const req=S.requests.find(r=>r.id===payload);
+    title.textContent='❌ 미션 신청 반려';
+    body.innerHTML=`
+      <div style="background:var(--y50);border-radius:12px;padding:13px;margin-bottom:14px;border:1.5px solid var(--y200)">
+        <div style="font-weight:700;margin-bottom:2px">👤 ${esc(req?.userName||'')}</div>
+        <div style="font-size:13px;color:var(--wg)">📌 ${esc(req?.missionName||'')} · 🪙${req?.reward||0}</div>
+      </div>
+      <div class="fg"><label>반려 사유 (선택 — 신청자에게 전달됨)</label><textarea id="reject-note" placeholder="예: 인증 사진이 첨부되지 않았습니다."></textarea></div>`;
+    acts.innerHTML=`<button class="btn-s" onclick="closeModal()">취소</button><button class="btn-p" style="background:linear-gradient(135deg,#f87171,#e11d48)" onclick="confirmReject('${payload}')">반려 처리</button>`;
+  }
+  else if(type==='quickgive'){
+    const tu=S.users[payload];
+    title.textContent=`💸 ${tu.name}님에게 코인 지급`;
+    body.innerHTML=`
+      <div style="text-align:center;margin-bottom:16px">
+        <div style="font-size:30px">🐱</div>
+        <div style="font-weight:800;font-size:16px">${esc(tu.name)}</div>
+        <div style="color:var(--wg);font-size:13px">현재 보유: 🪙${tu.coins.toLocaleString()}</div>
+      </div>
+      <div class="fg"><label>지급 코인 수</label><input type="number" id="qg-amount" placeholder="예: 100" min="1"></div>
+      <div class="fg" style="margin:0"><label>메모 (선택)</label><input type="text" id="qg-memo" placeholder="지급 사유"></div>`;
+    acts.innerHTML=`<button class="btn-s" onclick="closeModal()">취소</button><button class="btn-p" onclick="doQuickGive('${payload}')">🪙 지급하기</button>`;
+  }
+  else if(type==='editMember'){
+    const u=S.users[payload];
+    title.textContent='✏️ 멤버 정보 수정';
+    body.innerHTML=`
+      <div class="fg"><label>닉네임</label><input type="text" id="edit-name" value="${esc(u.name)}"></div>
+      <div class="fg"><label>비밀번호 초기화 (비워두면 유지)</label><input type="password" id="edit-pw" placeholder="새 비밀번호"></div>
+      <div class="fg" style="margin:0"><label>코인 직접 설정</label><input type="number" id="edit-coins" value="${u.coins}" min="0"></div>`;
+    acts.innerHTML=`<button class="btn-s" onclick="closeModal()">취소</button><button class="btn-p" onclick="saveEditMember('${payload}')">저장하기 ✓</button>`;
+  }
+  else if(type==='registerGmail'){
+    const u=S.cur;
+    title.textContent='📧 Gmail 주소 등록';
+    body.innerHTML=`
+      <div style="background:var(--y50);border-radius:12px;padding:14px;margin-bottom:16px;border:1.5px solid var(--y200);font-size:13px;color:#57534e;line-height:1.6">
+        등록한 Gmail 주소로 로그인 시 인증 코드가 발송됩니다.<br>
+        실제 서비스에서는 Firebase Auth 또는 Gmail API와 연동합니다.
+      </div>
+      <div class="fg" style="margin:0"><label>Gmail 주소</label><input type="email" id="gmail-input" placeholder="example@gmail.com" value="${esc(u?.gmail||'')}"></div>`;
+    acts.innerHTML=`<button class="btn-s" onclick="closeModal()">취소</button><button class="btn-p" onclick="saveGmail()">등록하기 ✓</button>`;
+  }
+}
+
+// ── MODAL SUBMIT FUNCTIONS ──
+function submitNotice(){
+  const t=g('am-title').value.trim(), c=g('am-content').value.trim();
+  if(!t||!c){toast('⚠️ 제목과 내용을 입력하세요');return;}
+  S.notices.push({id:'n'+Date.now(),title:t,content:c,date:today()});
+  toast('📢 공지사항 등록 완료!'); closeModal(); renderNotices();
+}
+function saveNotice(nid){
+  const n=S.notices.find(x=>x.id===nid); if(!n)return;
+  const t=g('am-title').value.trim(), c=g('am-content').value.trim();
+  if(!t||!c){toast('⚠️ 제목과 내용을 입력하세요');return;}
+  n.title=t; n.content=c;
+  toast('✅ 공지사항 수정 완료!'); closeModal(); renderNotices();
+}
+function submitMission(){
+  const name=g('am-name').value.trim(), desc=g('am-desc').value.trim();
+  const icon=g('am-icon').value.trim()||'🎯', reward=parseInt(g('am-reward').value)||0;
+  if(!name||reward<=0){toast('⚠️ 미션명과 보상 코인을 입력하세요');return;}
+  S.missions.push({id:'m'+Date.now(),title:name,desc,reward,icon});
+  toast('🎯 미션 등록 완료!'); closeModal(); renderMissions();
+}
+function saveMission(mid){
+  const m=S.missions.find(x=>x.id===mid); if(!m)return;
+  const name=g('am-name').value.trim(), desc=g('am-desc').value.trim();
+  const icon=g('am-icon').value.trim()||'🎯', reward=parseInt(g('am-reward').value)||0;
+  if(!name||reward<=0){toast('⚠️ 미션명과 보상 코인을 입력하세요');return;}
+  m.title=name; m.desc=desc; m.icon=icon; m.reward=reward;
+  toast('✅ 미션 수정 완료!'); closeModal(); renderMissions();
+}
+function submitShop(){
+  const name=g('sh-name').value.trim(), desc=g('sh-desc').value.trim();
+  const icon=g('sh-icon').value.trim()||'🎁', price=parseInt(g('sh-price').value)||0;
+  if(!name||price<=0){toast('⚠️ 상품명과 가격을 입력하세요');return;}
+  S.shop.push({id:'s'+Date.now(),name,desc,icon,price});
+  toast('🛒 상품 등록 완료!'); closeModal(); renderShop();
+}
+function saveShop(sid){
+  const item=S.shop.find(x=>x.id===sid); if(!item)return;
+  const name=g('sh-name').value.trim(), desc=g('sh-desc').value.trim();
+  const icon=g('sh-icon').value.trim()||item.icon, price=parseInt(g('sh-price').value)||0;
+  if(!name||price<=0){toast('⚠️ 상품명과 가격을 입력하세요');return;}
+  item.name=name; item.desc=desc; item.icon=icon; item.price=price;
+  toast('✅ 상품 수정 완료!'); closeModal(); renderShop();
+}
+function doQuickGive(uid){
+  const tu=S.users[uid]; if(!tu)return;
+  const amount=parseInt(g('qg-amount').value)||0;
+  if(amount<=0){toast('⚠️ 코인 수를 입력하세요');return;}
+  tu.coins+=amount;
+  if(S.cur?.id===uid){S.cur.coins=tu.coins;refreshBal();}
+  toast(`🪙 ${tu.name}님에게 ${amount} 코인 지급!`);
+  closeModal(); renderMembers(); fillGiveTarget();
+}
+function saveEditMember(uid){
+  const u=S.users[uid]; if(!u)return;
+  const name=g('edit-name').value.trim(), pw=g('edit-pw').value;
+  const coins=parseInt(g('edit-coins').value);
+  if(!name){toast('⚠️ 닉네임을 입력하세요');return;}
+  u.name=name;
+  if(pw)u.pw=pw;
+  if(!isNaN(coins)&&coins>=0)u.coins=coins;
+  if(S.cur?.id===uid){S.cur.name=name;if(!isNaN(coins))S.cur.coins=coins;refreshBal();g('pname').textContent=name;}
+  toast(`✅ ${name}님 정보 수정 완료!`);
+  closeModal(); renderMembers(); fillGiveTarget();
+}
+function saveGmail(){
+  const gmail=g('gmail-input').value.trim();
+  if(!gmail||!gmail.includes('@gmail.com')){toast('⚠️ 유효한 Gmail 주소를 입력하세요');return;}
+  const u=S.cur;
+  u.gmail=gmail; S.users[u.id].gmail=gmail;
+  toast('📧 Gmail 주소가 등록되었습니다');
+  closeModal(); renderGmailStatus();
+  // 등록 후 2FA 자동 활성화 여부 확인
+  if(!u.two_fa){
+    if(confirm('Gmail을 등록했습니다. 2단계 인증을 지금 바로 활성화하시겠어요?')){
+      u.two_fa=true; S.users[u.id].two_fa=true;
+      g('tfa-toggle').checked=true; renderGmailStatus();
+      toast('🔐 2단계 인증이 활성화되었습니다');
+    }
+  }
+}
+
+function closeModal(){g('umodal').style.display='none';}
+
+// ═══════════════════════════════════════════════════════
+// 🧭 TABS
+// ═══════════════════════════════════════════════════════
+function switchTabTo(name, btn) {
+  document.querySelectorAll('.tc').forEach(t=>t.classList.remove('active'));
+  document.querySelectorAll('.tb').forEach(b=>b.classList.remove('active'));
+  g('tab-'+name).classList.add('active');
+  const navBtn=btn||g('tnav-'+name);
+  if(navBtn)navBtn.classList.add('active');
+  if(name==='admin'&&S.cur?.is_admin){renderPending();renderMembers();fillGiveTarget();}
+}
+
+// ═══════════════════════════════════════════════════════
+// 🍞 TOAST
+// ═══════════════════════════════════════════════════════
+let _tt;
+function toast(msg){const t=g('toast');t.textContent=msg;t.classList.add('show');clearTimeout(_tt);_tt=setTimeout(()=>t.classList.remove('show'),3200);}
+
+// ═══════════════════════════════════════════════════════
+// 🛠 UTILS
+// ═══════════════════════════════════════════════════════
+function g(id){return document.getElementById(id);}
+function v(id){return (document.getElementById(id).value||'').trim();}
+function esc(s){return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
+function today(){return new Date().toLocaleDateString('ko-KR');}
+function emptyHTML(icon,msg){return `<div class="empty"><div class="ei">${icon}</div><p>${msg}</p></div>`;}
+
+g('umodal').addEventListener('click',function(e){if(e.target===this)closeModal();});
+g('tfa-modal').addEventListener('click',function(e){if(e.target===this)closeTFA();});
+</script>
+</body>
+</html>
